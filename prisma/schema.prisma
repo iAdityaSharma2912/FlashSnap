@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  password  String?
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  decks     Deck[]
+  sessions  Session[]
+  accounts  Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Deck {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  sourceType  SourceType  @default(TOPIC)
+  sourceFile  String?
+  topic       String?
+  cardCount   Int         @default(0)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards       Flashcard[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  lastStudied DateTime?
+  tags        String[]    @default([])
+  color       String      @default("#FFD60A")
+
+  @@index([userId])
+}
+
+model Flashcard {
+  id          String      @id @default(cuid())
+  question    String
+  answer      String
+  hint        String?
+  explanation String?
+  topic       String?
+  difficulty  Difficulty  @default(MEDIUM)
+  deckId      String
+  deck        Deck        @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reviewLogs  ReviewLog[]
+  easeFactor  Float       @default(2.5)
+  interval    Int         @default(0)
+  repetitions Int         @default(0)
+  nextReview  DateTime    @default(now())
+  mastery     Mastery     @default(NEW)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([deckId])
+  @@index([nextReview])
+}
+
+model ReviewLog {
+  id          String    @id @default(cuid())
+  flashcardId String
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  rating      Int
+  timeSpent   Int?
+  createdAt   DateTime  @default(now())
+
+  @@index([flashcardId])
+}
+
+enum SourceType {
+  PDF
+  TOPIC
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Mastery {
+  NEW
+  LEARNING
+  REVIEWING
+  MASTERED
+}
