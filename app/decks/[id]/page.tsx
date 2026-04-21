@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { ForgettingCurveVisualizer } from "@/components/flashcards/forgetting-curve";
+import { PublishToggle } from "@/components/decks/deck-control";
 import { Navbar } from "@/components/layout/navbar";
 import { FlashcardGrid } from "@/components/flashcards/flashcard-grid";
 import { ExportPanel } from "@/components/decks/export-panel";
@@ -12,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { ChevronLeft, Play, Loader2, BookOpen, Flame, FileText, Tag } from "lucide-react";
 import type { Deck, Flashcard, DeckStats } from "@/lib/types";
-import { formatDate, getMasteryColor } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 export default function DeckDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -88,7 +90,11 @@ export default function DeckDetailPage() {
               <p className="text-xs text-gray-600 mt-2">Created {formatDate(deck.createdAt)}</p>
             </div>
           </div>
+          
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* THIS IS THE MISSING PUBLISH TOGGLE */}
+            <PublishToggle deckId={deck.id} initialIsPublic={deck.isPublic ?? false} />
+            
             <ExportPanel deckTitle={deck.title} cards={cards} />
             <Link href={`/study/${deck.id}`}>
               <Button variant="default" className="gap-2 shadow-glow-yellow">
@@ -132,6 +138,11 @@ export default function DeckDetailPage() {
             </div>
           </div>
         )}
+
+        {/* THIS IS THE MISSING FORGETTING CURVE */}
+        <div className="mb-8">
+           <ForgettingCurveVisualizer cards={cards} deckColor={deck.color} />
+        </div>
 
         {/* Due today alert */}
         {stats && stats.dueToday > 0 && (

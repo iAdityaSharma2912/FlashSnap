@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-// FIX 1: Import from next-auth, not next-auth/react
-import { getServerSession } from "next-auth"; 
-// FIX 2: Use named import for prisma
+import { getServerSession } from "next-auth/next"; // Use /next for App Router
 import { prisma } from "@/lib/prisma"; 
+import { authOptions } from "@/lib/auth";
 
-// Optional: If your NextAuth requires authOptions, import it here:
-// import { authOptions } from "@/lib/auth";
+// Fix Next.js aggressive caching for this route
+export const dynamic = "force-dynamic";
 
-// FIX 3 & 4: Define the types for the mapped data so TypeScript doesn't complain
 type DeckWithCards = {
   id: string;
   title: string;
@@ -20,38 +18,35 @@ type DeckWithCards = {
 
 export async function GET() {
   try {
-    // If your setup requires authOptions, change this to: await getServerSession(authOptions)
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
-    // Fallback if not authenticated
     if (!session?.user?.email) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      console.log("Dashboard API: Unauthorized - No session found");
+      return NextResponse.json({ success: false, error: "Unauthorized - Please log in again." }, { status: 401 });
     }
 
-    // Get the user from the database
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
 
     if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+      console.log("Dashboard API: User not found in DB");
+      return NextResponse.json({ success: false, error: "User not found in database." }, { status: 404 });
     }
 
-    // 1. Fetch total decks
-    const totalDecks = await prisma.deck.count({
+    const totalDecksPromise = prisma.deck.count({
       where: { userId: user.id },
     });
 
-    // 2. Fetch cards mastered 
-    const cardsMastered = await prisma.flashcard.count({
+    // Check if this specific query is crashing due to schema mismatches
+    const cardsMasteredPromise = prisma.flashcard.count({
       where: {
         deck: { userId: user.id },
-        interval: { gt: 21 }, 
+        mastery: "MASTERED", 
       },
     });
 
-    // 3. Fetch Recent Decks with card counts
-    const rawRecentDecks = await prisma.deck.findMany({
+    const rawRecentDecksPromise = prisma.deck.findMany({
       where: { userId: user.id },
       orderBy: { updatedAt: "desc" },
       take: 3,
@@ -65,12 +60,18 @@ export async function GET() {
       },
     });
 
+    // Run queries concurrently
+    const [totalDecks, cardsMastered, rawRecentDecks] = await Promise.all([
+      totalDecksPromise,
+      cardsMasteredPromise,
+      rawRecentDecksPromise
+    ]);
+
     const now = new Date();
 
-    // Map the database response to the format our frontend expects
     const recentDecks = rawRecentDecks.map((deck: DeckWithCards) => {
-      const totalCards = deck.cards.length;
-      const dueCards = deck.cards.filter((card) => new Date(card.nextReview) <= now).length;
+      const totalCards = deck.cards?.length || 0;
+      const dueCards = deck.cards?.filter((card) => new Date(card.nextReview) <= now).length || 0;
       
       const progress = totalCards === 0 ? 0 : Math.round(((totalCards - dueCards) / totalCards) * 100);
 
@@ -95,14 +96,18 @@ export async function GET() {
         stats: {
           totalDecks,
           cardsMastered,
-          // Fallback to 0 if streak doesn't exist on your Prisma User model yet
-          studyStreak: (user as any).streak || 0, 
+          studyStreak: 0, 
         },
         recentDecks,
       },
     });
-  } catch (error) {
-    console.error("Dashboard fetch error:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch dashboard data" }, { status: 500 });
+  } catch (error: any) {
+    // This will print the EXACT reason it's failing to your terminal
+    console.error("🔥 DASHBOARD FETCH ERROR 🔥:", error.message || error);
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: `Server Error: ${error.message || "Failed to fetch dashboard data"}` 
+    }, { status: 500 });
   }
 }

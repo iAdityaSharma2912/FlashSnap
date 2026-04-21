@@ -402,7 +402,7 @@ export default function GeneratePage() {
           /* Results */
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Actions bar */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-zinc-800 bg-zinc-950/80 backdrop-blur-md shadow-lg">
+            <div className="relative z-50 flex flex-col md:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-zinc-800 bg-zinc-950/80 backdrop-blur-md shadow-lg">
               <div className="flex items-center gap-3 text-base font-medium text-gray-200">
                 <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-green-400" />

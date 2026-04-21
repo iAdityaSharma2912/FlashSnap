@@ -31,6 +31,12 @@ export interface Deck {
   lastStudied?: Date | string | null;
   tags: string[];
   color: string;
+  
+  // 🔥 NEW FEATURES
+  isPublic?: boolean;
+  cloneCount?: number;
+  clonedFrom?: string | null;
+  examDate?: Date | string | null;
 }
 
 export interface GeneratedFlashcard {

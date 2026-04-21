@@ -1,174 +1,121 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcw, Lightbulb, BookOpen } from "lucide-react";
-import { cn, getDifficultyColor, getMasteryColor, getMasteryLabel } from "@/lib/utils";
+import { RotateCw, Lightbulb } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Flashcard } from "@/lib/types";
 
 interface FlashcardCardProps {
   card: Flashcard;
   showControls?: boolean;
   onRate?: (rating: 0 | 1 | 2 | 3) => void;
-  className?: string;
 }
 
-const RATING_BUTTONS = [
-  { rating: 0 as const, label: "Again", color: "#FF4040", bgClass: "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20" },
-  { rating: 1 as const, label: "Hard", color: "#FF6B35", bgClass: "bg-orange/10 border-orange/30 text-orange hover:bg-orange/20" },
-  { rating: 2 as const, label: "Good", color: "#FFD60A", bgClass: "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20" },
-  { rating: 3 as const, label: "Easy", color: "#00FF9F", bgClass: "bg-accent/10 border-accent/30 text-accent hover:bg-accent/20" },
-];
-
-export function FlashcardCard({ card, showControls = false, onRate, className }: FlashcardCardProps) {
-  const [flipped, setFlipped] = useState(false);
+export function FlashcardCard({ card, showControls, onRate }: FlashcardCardProps) {
+  const [isFlipped, setIsFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false);
 
-  const handleFlip = () => {
-    setFlipped((f) => !f);
-    setShowHint(false);
-  };
-
-  const handleRate = (rating: 0 | 1 | 2 | 3) => {
-    onRate?.(rating);
-    setFlipped(false);
-    setShowHint(false);
-    setShowExplanation(false);
+  // Helper to color-code difficulty
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toUpperCase()) {
+      case "EASY": return "text-green-400 border-green-400/20 bg-green-400/10";
+      case "MEDIUM": return "text-yellow-400 border-yellow-400/20 bg-yellow-400/10";
+      case "HARD": return "text-red-400 border-red-400/20 bg-red-400/10";
+      default: return "text-blue-400 border-blue-400/20 bg-blue-400/10";
+    }
   };
 
   return (
-    <div className={cn("w-full", className)}>
-      {/* Flip card */}
-      <div
-        className={cn("flip-card w-full cursor-pointer", flipped && "flipped")}
-        style={{ height: 280 }}
-        onClick={handleFlip}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === " " && handleFlip()}
-      >
-        <div className="flip-card-inner">
-          {/* Front */}
-          <div className="flip-card-front">
-            <div className="w-full h-full rounded-2xl border border-dark-border bg-dark-card p-6 flex flex-col">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {card.topic && (
-                    <span className="text-xs text-gray-500 bg-dark-muted px-2 py-1 rounded-md">
-                      {card.topic}
-                    </span>
-                  )}
-                  <span
-                    className="text-xs px-2 py-1 rounded-md border"
-                    style={{
-                      color: getDifficultyColor(card.difficulty),
-                      borderColor: getDifficultyColor(card.difficulty) + "40",
-                      backgroundColor: getDifficultyColor(card.difficulty) + "15",
-                    }}
-                  >
-                    {card.difficulty.charAt(0) + card.difficulty.slice(1).toLowerCase()}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-600 flex items-center gap-1">
-                  <RotateCcw className="w-3 h-3" />
-                  flip
-                </span>
-              </div>
-
-              {/* Question */}
-              <div className="flex-1 flex items-center justify-center text-center">
-                <p className="text-base sm:text-lg font-medium text-gray-100 leading-relaxed">
-                  {card.question}
-                </p>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between mt-4">
-                {card.hint && !showHint && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowHint(true); }}
-                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary transition-colors"
-                  >
-                    <Lightbulb className="w-3.5 h-3.5" />
-                    Show hint
-                  </button>
-                )}
-                {showHint && card.hint && (
-                  <p className="text-xs text-primary/80 italic">{card.hint}</p>
-                )}
-                <div
-                  className="ml-auto w-2 h-2 rounded-full"
-                  style={{ backgroundColor: getMasteryColor(card.mastery) }}
-                />
-              </div>
+    <div
+      onClick={() => setIsFlipped(!isFlipped)}
+      className="group relative flex flex-col justify-between p-6 rounded-3xl border border-zinc-800 bg-zinc-950/80 hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-300 cursor-pointer min-h-[260px] shadow-lg w-full"
+    >
+      {!isFlipped ? (
+        // FRONT OF CARD (Question)
+        <div className="flex flex-col h-full animate-in fade-in duration-300">
+          <div className="flex items-start justify-between mb-4">
+            <span className={cn("text-xs font-bold px-2.5 py-1 rounded-md border", getDifficultyColor(card.difficulty))}>
+              {card.difficulty || "MEDIUM"}
+            </span>
+            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 group-hover:text-gray-300 transition-colors">
+              <RotateCw className="w-3.5 h-3.5" />
+              Flip
             </div>
           </div>
 
-          {/* Back */}
-          <div className="flip-card-back">
-            <div className="w-full h-full rounded-2xl border border-primary/30 bg-dark-card p-6 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-primary font-medium">Answer</span>
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style={{
-                    color: getMasteryColor(card.mastery),
-                    backgroundColor: getMasteryColor(card.mastery) + "20",
-                  }}
-                >
-                  {getMasteryLabel(card.mastery)}
-                </span>
-              </div>
-
-              <div className="flex-1 flex items-center justify-center text-center overflow-y-auto">
-                <p className="text-base sm:text-lg text-gray-100 leading-relaxed">
-                  {card.answer}
-                </p>
-              </div>
-
-              {card.explanation && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowExplanation((s) => !s); }}
-                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-accent transition-colors mt-3"
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  {showExplanation ? "Hide" : "Show"} explanation
-                </button>
-              )}
-              {showExplanation && card.explanation && (
-                <p className="text-xs text-gray-400 mt-2 p-3 rounded-xl bg-dark-muted border border-dark-border leading-relaxed">
-                  {card.explanation}
-                </p>
-              )}
-            </div>
+          <div className="flex-1 flex items-center justify-center py-4">
+            <h3 className="text-xl md:text-2xl font-bold text-white text-center leading-relaxed">
+              {card.question}
+            </h3>
           </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            {card.hint ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowHint(!showHint);
+                }}
+                className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-orange-400 transition-colors"
+              >
+                <Lightbulb className={cn("w-4 h-4", showHint && "text-orange-400")} />
+                {showHint ? "Hide hint" : "Show hint"}
+              </button>
+            ) : <div />} {/* Empty div to keep alignment if no hint */}
+            
+            <div className="w-2 h-2 rounded-full bg-blue-500/50" />
+          </div>
+
+          {showHint && card.hint && (
+            <div className="mt-4 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 animate-in fade-in slide-in-from-top-2">
+              <p className="text-sm text-orange-200">{card.hint}</p>
+            </div>
+          )}
         </div>
-      </div>
+      ) : (
+        // BACK OF CARD (Answer)
+        <div className="flex flex-col h-full animate-in fade-in duration-300">
+          <div className="flex items-start justify-between mb-4">
+            <span className="text-xs font-bold px-2.5 py-1 rounded-md border text-orange-400 border-orange-400/20 bg-orange-400/10">
+              Answer
+            </span>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-md border text-zinc-300 border-zinc-700 bg-zinc-800">
+              {card.mastery || "NEW"}
+            </span>
+          </div>
 
-      {/* Rating buttons — only when flipped and controls enabled */}
-      {showControls && flipped && onRate && (
-        <div className="grid grid-cols-4 gap-2 mt-4 animate-slide-up">
-          {RATING_BUTTONS.map(({ rating, label, bgClass }) => (
-            <button
-              key={rating}
-              onClick={() => handleRate(rating)}
-              className={cn(
-                "py-2.5 rounded-xl text-xs font-semibold border transition-all duration-150 active:scale-95",
-                bgClass
-              )}
+          <div className="flex-1 flex flex-col justify-center py-4 space-y-4">
+            <p className="text-lg md:text-xl font-medium text-gray-200 text-center leading-relaxed">
+              {card.answer}
+            </p>
+            
+            {card.explanation && (
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-gray-400 text-center">
+                {card.explanation}
+              </div>
+            )}
+          </div>
+
+          {/* If in Study Mode, show the rating controls on the back of the card */}
+          {showControls && onRate ? (
+            <div 
+              className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-zinc-800"
+              onClick={(e) => e.stopPropagation()} // Prevent flipping when rating
             >
-              {label}
-            </button>
-          ))}
+              <button onClick={() => onRate(0)} className="py-2 rounded-lg text-xs font-bold text-red-400 bg-red-400/10 hover:bg-red-400/20 transition-colors">Again</button>
+              <button onClick={() => onRate(1)} className="py-2 rounded-lg text-xs font-bold text-orange-400 bg-orange-400/10 hover:bg-orange-400/20 transition-colors">Hard</button>
+              <button onClick={() => onRate(2)} className="py-2 rounded-lg text-xs font-bold text-green-400 bg-green-400/10 hover:bg-green-400/20 transition-colors">Good</button>
+              <button onClick={() => onRate(3)} className="py-2 rounded-lg text-xs font-bold text-blue-400 bg-blue-400/10 hover:bg-blue-400/20 transition-colors">Easy</button>
+            </div>
+          ) : (
+            <div className="mt-4 flex items-center justify-end">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 group-hover:text-gray-300 transition-colors">
+                <RotateCw className="w-3.5 h-3.5" />
+                Flip back
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Instruction */}
-      {showControls && !flipped && (
-        <p className="text-center text-xs text-gray-600 mt-3">
-          Click the card to reveal the answer
-        </p>
       )}
     </div>
   );

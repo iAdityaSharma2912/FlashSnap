@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlashSnap
+
+FlashSnap is a modern flashcard application powered by AI. It transforms PDFs or topics into high-quality study decks with built-in spaced repetition for effective learning.
+
+## Features
+
+- **PDF to Flashcards** — Upload any PDF and get AI-generated Q&A cards
+- **Topic Generation** — Type any topic for comprehensive flashcard coverage
+- **SM-2 Spaced Repetition** — Science-backed algorithm that adapts to your recall performance
+- **Study Mode** — Flip cards and rate retention (Again/Hard/Good/Easy)
+- **Progress Tracking** — View mastery stats and due cards per deck
+- **Export** — Download as PDF, CSV (Anki-compatible), or JSON
+- **Authentication** — Email/password registration and login
+- **Demo Mode** — Generate and preview cards without signing up
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Database**: PostgreSQL with Prisma ORM
+- **Auth**: NextAuth.js with credentials provider
+- **Styling**: Tailwind CSS + Radix UI components
+- **AI**: OpenRouter API (supports multiple providers)
+- **PDF Processing**: pdf-parse
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database (Neon or Supabase recommended)
+- OpenRouter API key
+
+### Installation
+
+```bash
+npm install --legacy-peer-deps
+```
+
+### Environment Variables
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Configure these variables:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (Neon/Supabase) |
+| `OPENROUTER_API_KEY` | Get from [openrouter.ai](https://openrouter.ai/keys) |
+| `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` to generate |
+| `NEXTAUTH_URL` | `http://localhost:3000` (dev) or your domain (prod) |
+
+### Database Setup
+
+```bash
+npx prisma db push
+```
+
+### Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production (includes Prisma generate) |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:push` | Push schema changes to database |
+| `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:studio` | Open Prisma Studio |
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+flashsnap/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx            # Landing page
+│   ├── generate/           # Flashcard generation
+│   ├── decks/              # Deck management
+│   ├── study/[id]/         # Study mode
+│   ├── login/              # Authentication
+│   ├── register/           # User registration
+│   └── api/                # API routes
+├── components/             # React components
+│   ├── ui/                 # Base UI components
+│   ├── layout/             # Navbar, PageHeader
+│   ├── generate/           # PDF upload, generation
+│   ├── flashcards/         # Flashcard components
+│   └── decks/              # Deck components
+├── lib/                    # Core utilities
+│   ├── prisma.ts           # Database client
+│   ├── auth.ts             # NextAuth config
+│   ├── openrouter.ts       # AI integration
+│   ├── sm2.ts              # Spaced repetition algorithm
+│   └── export.ts           # Export utilities
+└── prisma/
+    └── schema.prisma       # Database schema
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deploy to Vercel (free):
 
-## Deploy on Vercel
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The `vercel.json` file configures the build to include Prisma generation.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT

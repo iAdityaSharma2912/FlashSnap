@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; // Removed duplicate import
 import { useParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
+import { StudyModeSwitcher, type StudyModeType } from "@/components/decks/deck-control";
+import { VoiceAnswerMode } from "@/components/flashcards/voice-answer-mode";
 import { StudyMode } from "@/components/flashcards/study-mode";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -25,6 +27,10 @@ type StudyFilter = "due" | "all" | "new";
 export default function StudyPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  
+  // New State for Voice Mode toggle
+  const [studyMode, setStudyMode] = useState<StudyModeType>("standard");
+  
   const [deck, setDeck] = useState<Deck | null>(null);
   const [allCards, setAllCards] = useState<Flashcard[]>([]);
   const [studyCards, setStudyCards] = useState<Flashcard[] | null>(null);
@@ -98,15 +104,35 @@ export default function StudyPage() {
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 pt-12 relative z-10">
         {studyCards ? (
-          <StudyMode
-            cards={studyCards}
-            deckId={id}
-            onComplete={() => {
-              router.push(`/decks/${id}`);
-              toast({ title: "Session complete", description: "Great work — keep it up!" });
-            }}
-            onBack={() => setStudyCards(null)}
-          />
+          <div className="space-y-6">
+            {/* THIS IS THE MISSING TOGGLE */}
+            <div className="flex justify-end">
+              <StudyModeSwitcher mode={studyMode} onChange={setStudyMode} deckId={id} />
+            </div>
+
+            {/* CONDITIONAL RENDERING FOR VOICE vs STANDARD */}
+            {studyMode === "voice" ? (
+              <VoiceAnswerMode
+                cards={studyCards}
+                deckId={id}
+                onComplete={() => {
+                  router.push(`/decks/${id}`);
+                  toast({ title: "Session complete", description: "Great work — keep it up!" });
+                }}
+                onBack={() => setStudyCards(null)}
+              />
+            ) : (
+              <StudyMode
+                cards={studyCards}
+                deckId={id}
+                onComplete={() => {
+                  router.push(`/decks/${id}`);
+                  toast({ title: "Session complete", description: "Great work — keep it up!" });
+                }}
+                onBack={() => setStudyCards(null)}
+              />
+            )}
+          </div>
         ) : (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
