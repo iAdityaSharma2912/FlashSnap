@@ -70,13 +70,15 @@ model Deck {
   lastStudied DateTime?
   tags        String[]    @default([])
   color       String      @default("#FFD60A")
-  
-  // 🔥 ADDED THESE TWO LINES TO FIX THE VERCEL ERROR:
   isPublic    Boolean     @default(false)
   clonedFrom  String?     
+  
+  // 🔥 ADD THIS LINE:
+  cloneCount  Int         @default(0)
 
   @@index([userId])
 }
+
 
 model Flashcard {
   id          String      @id @default(cuid())
