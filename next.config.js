@@ -2,6 +2,11 @@
 const nextConfig = {
   serverExternalPackages: ["pdf-parse", "@prisma/client"],
 
+  // 🔥 ADDED THIS BLOCK TO FIX VERCEL TURBOPACK ERROR
+  experimental: {
+    turbopack: {},
+  },
+
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = [
