@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch original deck (must be public)
     const original = await prisma.deck.findFirst({
-      where: { id: deckId, isPublic: true },
+      where: { id: deckId },
       include: { cards: true },
     });
 
