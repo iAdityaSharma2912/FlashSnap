@@ -3,11 +3,17 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { Resend } from "resend";
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: Request) {
   try {
+    // 🔥 FIX: We moved the Resend initialization INSIDE the function!
+    // This prevents Next.js from crashing during the build phase.
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is missing!");
+      return NextResponse.json({ error: "Email service unconfigured" }, { status: 500 });
+    }
+    
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     const { email } = await req.json();
 
     const user = await prisma.user.findUnique({ where: { email } });
