@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server"; // 🔥 Added NextRequest here
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { Resend } from "resend";
 
-export async function POST(req: Request) {
+// 🔥 Changed req type to NextRequest here
+export async function POST(req: NextRequest) { 
   try {
-    // 🔥 FIX: We moved the Resend initialization INSIDE the function!
-    // This prevents Next.js from crashing during the build phase.
     if (!process.env.RESEND_API_KEY) {
       console.error("RESEND_API_KEY is missing!");
       return NextResponse.json({ error: "Email service unconfigured" }, { status: 500 });
